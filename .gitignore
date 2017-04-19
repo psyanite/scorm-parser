@@ -25,3 +25,6 @@ project/plugins/project/
 # Build output
 /build/
 /out/
+
+# Build properties
+local.properties
