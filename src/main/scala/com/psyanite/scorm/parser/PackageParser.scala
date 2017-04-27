@@ -6,7 +6,7 @@ import java.nio.file.{Files, Paths}
 import net.lingala.zip4j.core.ZipFile
 import org.apache.commons.io.FileUtils
 
-case class PackageParser() {
+object PackageParser {
     def parseZip(file: File): ParseResult = {
         if (!file.exists) {
             return ParseResult(success = false, Set("File does not exist, " + file.toString), None, None)
@@ -34,10 +34,6 @@ case class PackageParser() {
         if (!manifest.exists) {
             return ParseResult(success = false, Set("Manifest file 'imsmanifest.xml' not found"), None, None)
         }
-        ManifestParser.get.parse(manifest)
+        ManifestParser().parse(manifest)
     }
-}
-
-object PackageParser {
-    def get = new PackageParser
 }
