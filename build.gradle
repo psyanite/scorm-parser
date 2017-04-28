@@ -72,9 +72,11 @@ publishing {
             version project.version
             pom.withXml {
                 def root = asNode()
-                root.appendNode('description', project.description)
                 root.appendNode('name', rootProject.name)
+                root.appendNode('description', project.description)
                 root.appendNode('url', 'https://github.com/psyanite/scorm-parser')
+                def scm = root.appendNode('scm')
+                scm.appendNode('url', 'https://github.com/psyanite/scorm-parser')
                 root.children().last() + pomConfig
             }
         }
@@ -93,9 +95,14 @@ bintray {
     pkg {
         repo = 'psyanite'
         name = rootProject.name
+        userOrg = 'psyanite'
         licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/psyanite/scorm-parser.git'
         version {
             name = project.version
+            gpg {
+                sign = true
+            }
         }
     }
 }
