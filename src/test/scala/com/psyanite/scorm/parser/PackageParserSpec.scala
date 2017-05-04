@@ -1,7 +1,10 @@
 package com.psyanite.scorm.parser
 
 import java.io.File
+import java.nio.file.Path
 
+import com.psyanite.scorm.exception.InvalidManifestException
+import net.lingala.zip4j.exception.ZipException
 import org.scalatest.{FunSpec, Matchers}
 
 class PackageParserSpec extends FunSpec with Matchers {
@@ -12,216 +15,219 @@ class PackageParserSpec extends FunSpec with Matchers {
     private val ValidZipPath   = BasePath + "valid/zip/"
     private val InvalidZipPath = BasePath + "invalid/zip/"
 
-    private def buildValidSubDir(dir: String): File = {
-        new File(ValidDirPath + dir)
+    private def buildValidSubDir(dir: String): Path = {
+        new File(ValidDirPath + dir).toPath
     }
 
-    private def buildInvalidSubDir(dir: String): File = {
-        new File(InvalidDirPath + dir)
+    private def buildInvalidSubDir(dir: String): Path = {
+        new File(InvalidDirPath + dir).toPath
     }
 
-    private def buildValidZipFile(zip: String): File = {
-        new File(ValidZipPath + zip + ".zip")
+    private def buildValidZipFile(zip: String): Path = {
+        new File(ValidZipPath + zip + ".zip").toPath
     }
 
-    private def buildInvalidZipFile(zip: String): File = {
-        new File(InvalidZipPath + zip + ".zip")
+    private def buildInvalidZipFile(zip: String): Path = {
+        new File(InvalidZipPath + zip + ".zip").toPath
     }
 
-    describe(PackageParser.getClass.getName) {
+    describe(PackageParser().getClass.getName) {
 
         describe("parseZip()") {
 
-            it("should return false when parsing a non-existing zip") {
-                val zip = new File("non-existing.zip")
-                val result = PackageParser.parseZip(zip)
-                result.success should be (false)
-                result.errors should be (Set("File does not exist, " + zip.toString))
-            }
-
-            it("should return true when parsing a valid zip") {
+            it("should return correct metadata when parsing a valid zip") {
                 val zip = buildValidZipFile("valid-zip")
-                val result = PackageParser.parseZip(zip)
-                result.success should be (true)
-                result.errors should be (Set())
-                result.entryPoint should be (Some("SCORM.htm"))
-                result.score should be (None)
+                val metadata = PackageParser().parseZip(zip)
+                metadata.items.head.masteryScore should be (None)
+                metadata.resources.head.href should be (Some("SCORM.htm"))
             }
 
-            it("should return false when parsing a corrupt zip") {
+            it("should throw %s when parsing a non-existing zip".format(classOf[NullPointerException].getCanonicalName)) {
+                val zip = new File("non-existing.zip").toPath
+                assertThrows[NullPointerException] {
+                    PackageParser().parseZip(zip)
+                }
+            }
+
+            it("should throw %s when parsing a corrupt zip".format(classOf[ZipException].getCanonicalName)) {
                 val zip = buildInvalidZipFile("invalid-zip-corrupt")
-                val result = PackageParser.parseZip(zip)
-                result.success should be (false)
-                result.errors should contain ("Error unzipping zip file, " + zip.toString)
-                result.entryPoint should be (None)
-                result.score should be (None)
+                assertThrows[ZipException] {
+                    PackageParser().parseZip(zip)
+                }
             }
 
-            it("should return false when parsing a zip with no manifest file") {
+            it("should throw %s when parsing a zip with no manifest file".format(classOf[InvalidManifestException].getCanonicalName)) {
                 val zip = buildInvalidZipFile("invalid-zip-no-manifest")
-                val result = PackageParser.parseZip(zip)
-                result.success should be (false)
-                result.errors should contain ("Manifest file 'imsmanifest.xml' not found")
-                result.entryPoint should be (None)
-                result.score should be (None)
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseZip(zip)
+                }
+                exception.getMessage should be ("Manifest file 'imsmanifest.xml' not found")
             }
 
-            it("should return false when parsing a zip with a manifest file with no schema") {
+            it("should throw %s when parsing a zip with a manifest file with no schema".format(classOf[InvalidManifestException].getCanonicalName)) {
                 val zip = buildInvalidZipFile("invalid-zip-no-schema")
-                val result = PackageParser.parseZip(zip)
-                result.success should be (false)
-                result.errors should contain ("Metadata schema and scheme not found")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseZip(zip)
+                }
+                exception.getMessage should be ("Metadata schema and scheme not found")
             }
         }
 
         describe("parseDirectory()") {
 
-            it("should return false when parsing a non-existing directory") {
-                val directory = new File("non-existing-directory")
-                val result = PackageParser.parseDirectory(directory)
-                result.success should be (false)
-                result.errors should contain ("Directory does not exist, " + directory.toString)
-                result.entryPoint should be (None)
-                result.score should be (None)
+            it("should throw %s when parsing a non-existing directory".format(classOf[NullPointerException].getCanonicalName)) {
+                val directory = new File("non-existing-directory").toPath
+                assertThrows[NullPointerException] {
+                    PackageParser().parseZip(directory)
+                }
             }
 
-            it("should return false when parsing a directory with no 'imsmanifest.xml' file") {
+            it("should throw %s when the manifest file is empty".format(classOf[Exception].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-empty")
+                val exception = intercept[Exception] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Manifest file was not a well-formed XML file")
+            }
+
+            it("should throw %s when the manifest file is a random string".format(classOf[Exception].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-random-string")
+                val exception = intercept[Exception] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Manifest file was not a well-formed XML file")
+            }
+
+            it("should throw %s when the manifest file is not well-formed".format(classOf[Exception].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-not-well-formed")
+                val exception = intercept[Exception] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Manifest file was not a well-formed XML file")
+            }
+
+            it("should throw %s when parsing a directory with no 'imsmanifest.xml' file".format(classOf[InvalidManifestException].getCanonicalName)) {
                 val directory = buildInvalidSubDir("invalid-no-manifest-file")
-                val result = PackageParser.parseDirectory(directory)
-                result.success should be (false)
-                result.errors should contain ("Manifest file 'imsmanifest.xml' not found")
-                result.entryPoint should be (None)
-                result.score should be (None)
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Manifest file 'imsmanifest.xml' not found")
             }
 
-            describe("should return false when parsing a directory with an invalid manifest file") {
-
-                it("when the manifest file is empty") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-empty"))
-                    result.success should be (false)
-                    result.errors should contain ("SCO entry point not found")
-                    result.errors should contain ("Metadata schema and scheme not found")
+            it("should throw %s when the manifest file has no schema and scheme".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-no-schema-no-scheme")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
                 }
-
-                it("when the manifest file is a random string") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-random-string"))
-                    result.success should be (false)
-                    result.errors should contain ("SCO entry point not found")
-                    result.errors should contain ("Metadata schema and scheme not found")
-                    result.entryPoint should be (None)
-                    result.score should be (None)
-                }
-
-                it("when the manifest file is not well-formed") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-not-well-formed"))
-                    result.success should be (false)
-                    result.errors should be (Set("Manifest file was not a well-formed XML file"))
-                }
-
-                it("when the manifest file has no schema and scheme") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-no-schema-no-scheme"))
-                    result.success should be (false)
-                    result.errors should be (Set("Metadata schema and scheme not found"))
-                }
-
-                it("when the manifest file has no schema value") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-no-schema-value"))
-                    result.success should be (false)
-                    result.errors should be (Set("Schema value not found"))
-                }
-
-                it("when the manifest file has no schema version") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-no-schema-version"))
-                    result.success should be (false)
-                    result.errors should be (Set("Schema version not found"))
-                }
-
-                it("when the manifest file has an invalid schema value") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-schema-value"))
-                    result.success should be (false)
-                    result.errors should be (Set("Invalid schema value found; expected 'ADL SCORM', but found 'ADL SCORM1'"))
-                }
-
-                it("when the manifest file has an invalid schema version") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-schema-version"))
-                    result.success should be (false)
-                    result.errors should be (Set("Invalid schema version value found; expected '1.2', but found '1.21'"))
-                }
-
-                it("when the manifest file has an invalid scheme value") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-scheme-value"))
-                    result.success should be (false)
-                    result.errors should be (Set("Invalid scheme value found; expected 'ADL SCORM 1.2', but found 'ADL SCORM 1.21'"))
-                }
-
-                it("when the manifest file has a mastery score smaller than 0") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-mastery-score-too-small"))
-                    result.success should be (false)
-                    result.errors should be (Set("Mastery score value '-20' is not between 0 and 100"))
-                }
-
-                it("when the manifest file has a mastery score larger than 100") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-mastery-score-too-large"))
-                    result.success should be (false)
-                    result.errors should be (Set("Mastery score value '200' is not between 0 and 100"))
-                }
-
-                it("when the manifest file has a valid SCO but the href is empty") {
-                    val result = PackageParser.parseDirectory(buildInvalidSubDir("invalid-no-schema-version"))
-                    result.success should be (false)
-                    result.errors should be (Set("Schema version not found"))
-                }
+                exception.getMessage should be ("Metadata schema and scheme not found")
             }
 
-            describe("should return success when parsing a directory with a valid manifest file") {
+            it("should throw %s when the manifest file has no schema value".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-no-schema-value")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Metadata schema not found")
+            }
+
+            it("should throw %s when the manifest file has no schema version".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-no-schema-version")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Metadata schema version not found")
+            }
+
+            it("should throw %s when the manifest file has an invalid schema value".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-schema-value")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Invalid metadata schema value found; expected 'ADL SCORM', but found 'ADL SCORM1'")
+            }
+
+            it("should throw %s when the manifest file has an invalid schema version".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-schema-version")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Invalid metadata schema version value found; expected '1.2', but found '1.21'")
+            }
+
+            it("should throw %s when the manifest file has an invalid scheme value".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-scheme-value")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Invalid metadata scheme value found; expected 'ADL SCORM 1.2', but found 'ADL SCORM 1.21'")
+            }
+
+            it("should throw %s when the manifest file has a mastery score smaller than 0".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-mastery-score-too-small")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Invalid mastery score '-20' found; expected value between 0 and 100")
+            }
+
+            it("should throw %s when the manifest file has a mastery score larger than 100".format(classOf[InvalidManifestException].getCanonicalName)) {
+                val directory = buildInvalidSubDir("invalid-mastery-score-too-large")
+                val exception = intercept[InvalidManifestException] {
+                    PackageParser().parseDirectory(directory)
+                }
+                exception.getMessage should be ("Invalid mastery score '200' found; expected value between 0 and 100")
+            }
+
+            describe("should return correct metadata when parsing a directory with a valid manifest file") {
 
                 it("when the manifest file has both valid metadata schema and scheme") {
-                    val result = PackageParser.parseDirectory(buildValidSubDir("valid-1"))
-                    result.success should be (true)
-                    result.entryPoint should be (Some("heyo.html"))
-                    result.score should be (Some(99))
+                    val directory = buildValidSubDir("valid-1")
+                    val metadata = PackageParser().parseDirectory(directory)
+                    metadata.items.head.masteryScore should be (Some(99))
+                    metadata.resources.head.href should be (Some("heyo.html"))
                 }
 
                 it("when the manifest file only has a valid metadata schema") {
-                    val result = PackageParser.parseDirectory(buildValidSubDir("valid-noodle-box"))
-                    result.success should be (true)
-                    result.entryPoint should be (Some("index_lms.html"))
-                    result.score should be (Some(80))
+                    val directory = buildValidSubDir("valid-noodle-box")
+                    val metadata = PackageParser().parseDirectory(directory)
+                    metadata.items.head.masteryScore should be (Some(80))
+                    metadata.resources.head.href should be (Some("index_lms.html"))
                 }
 
                 it("when the manifest file only has a valid metadata scheme") {
-                    val result = PackageParser.parseDirectory(buildValidSubDir("valid-blood-and-body"))
-                    result.success should be (true)
-                    result.entryPoint should be (Some("Blood and Body Fluid Exposure Protocol.html"))
-                    result.score should be (Some(0))
+                    val directory = buildValidSubDir("valid-blood-and-body")
+                    val metadata = PackageParser().parseDirectory(directory)
+                    metadata.items.head.masteryScore should be (Some(0))
+                    metadata.resources.head.href should be (Some("Blood and Body Fluid Exposure Protocol.html"))
                 }
 
                 it("when the manifest file has no mastery score") {
-                    val result = PackageParser.parseDirectory(buildValidSubDir("valid-content-packaging-single-sco-scorm-1-2"))
-                    result.success should be (true)
-                    result.entryPoint should be (Some("shared/launchpage.html"))
-                    result.score should be (None)
+                    val directory = buildValidSubDir("valid-content-packaging-single-sco-scorm-1-2")
+                    val metadata = PackageParser().parseDirectory(directory)
+                    metadata.items.head.masteryScore should be (None)
+                    metadata.resources.head.href should be (Some("shared/launchpage.html"))
                 }
 
                 it("when the manifest file has the first SCO resource with an empty href, but a valid second SCO resource") {
-                    val result = PackageParser.parseDirectory(buildValidSubDir("valid-2"))
-                    result.success should be (true)
-                    result.entryPoint should be (Some("hello.html"))
-                    result.score should be (Some(69))
+                    val directory = buildValidSubDir("valid-2")
+                    val metadata = PackageParser().parseDirectory(directory)
+                    metadata.items.head.masteryScore should be (Some(69))
+                    metadata.resources.head.href should be (Some(""))
+                    metadata.resources(1).href should be (Some("hello.html"))
                 }
 
                 it("when the manifest file has a single SCO") {
-                    val result = PackageParser.parseDirectory(buildValidSubDir("valid-scorm-test-1"))
-                    result.success should be (true)
-                    result.entryPoint should be (Some("SCORM.htm"))
-                    result.score should be (None)
+                    val directory = buildValidSubDir("valid-scorm-test-1")
+                    val metadata = PackageParser().parseDirectory(directory)
+                    metadata.items.head.masteryScore should be (None)
+                    metadata.resources.head.href should be (Some("SCORM.htm"))
                 }
 
                 it("when the manifest file has multiple SCOs") {
-                    val result = PackageParser.parseDirectory(buildValidSubDir("valid-run-time-minimum-calls"))
-                    result.success should be (true)
-                    result.entryPoint should be (Some("Playing/Playing.html"))
-                    result.score should be (None)
+                    val directory = buildValidSubDir("valid-run-time-minimum-calls")
+                    val metadata = PackageParser().parseDirectory(directory)
+                    metadata.items.head.masteryScore should be (None)
+                    metadata.resources.head.href should be (Some("Playing/Playing.html"))
                 }
             }
         }
