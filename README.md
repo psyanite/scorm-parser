@@ -17,31 +17,46 @@ version: 0.1.0
 import com.psyanite.scorm.parser.PackageParser
 import com.psyanite.scorm.parser.ManifestParser
 
+
 val zip = new File("my-archive.zip")
-val result = PackageParser.parseZip(zip)
+val metadata = try {
+  PackageParser.parseZip(zip)
+} catch {
+  case e: Exception => println(e.message)
+}
 
 val directory = new File("/my-directory")
-result = PackageParser.parseDirectory(zip)
+val metadata = try {
+  PackageParser.parseDirectory(zip)
+} catch {
+  case e: Exception => println(e.message)
+}
 
 val manifest = new File("/my-directory/imsmanifest.xml")
-result = ManifestParser().parse(manifest)
+val metadata = try {
+  ManifestParser().parse(manifest)
+} catch {
+  case e: Exception => println(e.message)
+}
 
-if (result.success) {
-  println("Valid SCORM 1.2 package detected")
-  println("Entry point is %s".format(result.entryPoint.get))
-  println("Mastery score is %d".format(result.score.get))
+
+metadata.item.head.masteryScore match {
+  case Some(score) => println("Mastery score is %d".format(score))
+  case None        => println("No mastery score")
 }
-else {
-  result.errors.foreach(println)
+
+metadata.resources.head.href match {
+  case Some(href) => println("First entry point is %s".format(href))
+  case None       => println("First resources has no entry point")
 }
+
 ```
 
-#### ParseResult class
-```
-case class ParseResult(
-    var success: Boolean,
-    var errors: Set[String],
-    var entryPoint: Option[String],
-    var score: Option[Int]
+#### Metadata class
+```scala
+class Metadata(
+    var schema: Schema,
+    var items: Seq[Item],
+    var resources: Seq[Resource]
 )
 ```
