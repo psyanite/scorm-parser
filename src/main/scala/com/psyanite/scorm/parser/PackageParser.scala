@@ -1,39 +1,43 @@
 package com.psyanite.scorm.parser
 
 import java.io._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 
+import com.psyanite.scorm.exception.InvalidManifestException
+import com.psyanite.scorm.metadata.Metadata
 import net.lingala.zip4j.core.ZipFile
+import net.lingala.zip4j.exception.ZipException
 import org.apache.commons.io.FileUtils
 
-object PackageParser {
-    def parseZip(file: File): ParseResult = {
-        if (!file.exists) {
-            return ParseResult(success = false, Set("File does not exist, " + file.toString), None, None)
-        }
-        var directory = new File("")
-        try {
-            val zip = new ZipFile(file)
-            directory = Files.createTempDirectory(Paths.get(file.getParent), file.getName + System.nanoTime.toString).toFile
-            zip.extractAll(directory.toString)
-            parseDirectory(directory)
-        }
-        catch {
-            case _: Exception => ParseResult(success = false, Set("Error unzipping zip file, " + file.toString), None, None)
-        }
-        finally {
-            FileUtils.deleteDirectory(directory)
-        }
+class PackageParser {
+
+    @throws(classOf[NullPointerException])
+    @throws(classOf[IOException])
+    @throws(classOf[InvalidManifestException])
+    @throws(classOf[ZipException])
+    def parseZip(path: Path): Metadata = {
+        val file = path.toFile
+        val zip = new ZipFile(file)
+        val directory = Files.createTempDirectory(Paths.get(file.getParent), file.getName + System.nanoTime.toString)
+        zip.extractAll(directory.toString)
+        val metadata = parseDirectory(directory)
+        FileUtils.deleteDirectory(directory.toFile)
+        metadata
     }
 
-    def parseDirectory(dir: File): ParseResult = {
-        if (!dir.exists) {
-            return ParseResult(success = false, Set("Directory does not exist, " + dir.toString), None, None)
-        }
-        val manifest = new File(dir, ManifestValidator.ManifestFile)
-        if (!manifest.exists) {
-            return ParseResult(success = false, Set("Manifest file 'imsmanifest.xml' not found"), None, None)
+    @throws(classOf[NullPointerException])
+    @throws(classOf[IOException])
+    @throws(classOf[InvalidManifestException])
+    def parseDirectory(path: Path): Metadata = {
+        val manifest = new File(path.toFile, PackageParser.ManifestFile)
+        if (!manifest.exists()) {
+            throw new InvalidManifestException("Manifest file 'imsmanifest.xml' not found")
         }
         ManifestParser().parse(manifest)
     }
+}
+
+object PackageParser {
+    def ManifestFile = "imsmanifest.xml"
+    def apply() = new PackageParser
 }
