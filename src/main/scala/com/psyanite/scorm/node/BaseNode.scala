@@ -1,9 +1,8 @@
-package com.psyanite.scorm.helper
+package com.psyanite.scorm.node
 
 import scala.xml.NodeSeq
 
-object Helper {
-
+trait BaseNode {
     def getText(nodeSeq: NodeSeq): Option[String] = {
         nodeSeq.headOption match {
             case Some(node) => Some(node.text)
