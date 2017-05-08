@@ -1,4 +1,4 @@
-package com.psyanite.scorm.util
+package com.psyanite.scorm
 
 import java.io._
 import java.nio.file.{Files, Path, Paths}
@@ -12,39 +12,26 @@ import org.apache.commons.io.FileUtils
 
 import scala.xml.{SAXParseException, XML}
 
-class Util {
+class PackageParser(val path: Path) {
 
-    @throws(classOf[NullPointerException])
     @throws(classOf[IOException])
     @throws(classOf[ParseException])
     @throws(classOf[ZipException])
-    def parseZip(path: Path): Manifest = {
-        val file = path.toFile
-        if (!file.exists) {
-            throw new ParseException("Zip file does not exist")
-        }
-        val zipFile = new ZipFile(file)
-        val directory = Files.createTempDirectory(Paths.get(file.getParent), file.getName + System.nanoTime.toString)
-        try {
-            zipFile.extractAll(directory.toString)
-            parseDirectory(directory)
-        }
-        finally {
-            FileUtils.deleteDirectory(directory.toFile)
-        }
+    def this(zip: File) = {
+        this(PackageParser.unzip(zip))
     }
 
     @throws(classOf[NullPointerException])
     @throws(classOf[IOException])
     @throws(classOf[ParseException])
-    def parseDirectory(path: Path): Manifest = {
+    def parse(): Manifest = {
         val directory = path.toFile
         if (!directory.exists) {
             throw new ParseException("Directory does not exist")
         }
-        val manifest = path.resolve(Util.ManifestFile).toFile
+        val manifest = path.resolve(PackageParser.ManifestFile).toFile
         if (!manifest.exists) {
-            throw new ParseException("Manifest file '%s' not found".format(Util.ManifestFile))
+            throw new ParseException("Manifest file '%s' not found".format(PackageParser.ManifestFile))
         }
         parseManifest(manifest.toPath)
     }
@@ -52,7 +39,7 @@ class Util {
     @throws(classOf[NullPointerException])
     @throws(classOf[IOException])
     @throws(classOf[ParseException])
-    def parseManifest(path: Path): Manifest = {
+    private def parseManifest(path: Path): Manifest = {
         val file = path.toFile
         try {
             val xml       = XML.loadFile(file)
@@ -76,6 +63,26 @@ class Util {
     }
 }
 
-object Util {
-    def ManifestFile = "imsmanifest.xml"
+object PackageParser {
+    final val ManifestFile = "imsmanifest.xml"
+
+    def apply(path: Path): PackageParser = new PackageParser(path)
+
+    @throws(classOf[NullPointerException])
+    @throws(classOf[IOException])
+    @throws(classOf[ParseException])
+    @throws(classOf[ZipException])
+    def apply(zip: File): PackageParser = {
+        val path: Path = unzip(zip)
+        apply(path)
+    }
+
+    @throws(classOf[ZipException])
+    private def unzip(zip: File): Path = {
+        val zipFile = new ZipFile(zip)
+        val directory = Files.createTempDirectory(Paths.get(zip.getParent), zip.getName + System.nanoTime.toString)
+        zipFile.extractAll(directory.toString)
+        directory
+    }
+
 }
