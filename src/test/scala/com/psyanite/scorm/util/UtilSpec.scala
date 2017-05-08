@@ -1,4 +1,4 @@
-package com.psyanite.scorm.Util
+package com.psyanite.scorm.util
 
 import java.io.File
 import java.nio.file.Path

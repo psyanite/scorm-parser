@@ -1,4 +1,4 @@
-package com.psyanite.scorm.Util
+package com.psyanite.scorm.util
 
 import java.io._
 import java.nio.file.{Files, Path, Paths}
@@ -12,44 +12,13 @@ import org.apache.commons.io.FileUtils
 
 import scala.xml.{SAXParseException, XML}
 
-class Util (
-    var zip: Option[Path]       = None,
-    var directory: Option[Path] = None,
-    var manifest: Option[Path]  = None
-) {
+class Util {
 
     @throws(classOf[NullPointerException])
     @throws(classOf[IOException])
     @throws(classOf[ParseException])
     @throws(classOf[ZipException])
-    def parseZip: Manifest = {
-        zip.map(parseZip).getOrElse(throw new ParseException("Zip file is not defined in parser"))
-    }
-
-    @throws(classOf[NullPointerException])
-    @throws(classOf[IOException])
-    @throws(classOf[ParseException])
-    def parseDirectory: Manifest = {
-        directory.map(parseDirectory).getOrElse(throw new ParseException("Directory is not defined in parser"))
-    }
-
-    @throws(classOf[NullPointerException])
-    @throws(classOf[IOException])
-    @throws(classOf[ParseException])
-    def parseManifest: Manifest = {
-        manifest.map(parseManifest).getOrElse(throw new ParseException("Manifest file is not defined in parser"))
-    }
-
-    /**
-      * Returns a sequence of errors found upon validation
-      * @param manifest
-      * @return
-      */
-    def validate(manifest: Manifest): Seq[String] = {
-        ManifestValidator().validate(manifest)
-    }
-
-    private def parseZip(path: Path): Manifest = {
+    def parseZip(path: Path): Manifest = {
         val file = path.toFile
         if (!file.exists) {
             throw new ParseException("Zip file does not exist")
@@ -65,7 +34,10 @@ class Util (
         }
     }
 
-    private def parseDirectory(path: Path): Manifest = {
+    @throws(classOf[NullPointerException])
+    @throws(classOf[IOException])
+    @throws(classOf[ParseException])
+    def parseDirectory(path: Path): Manifest = {
         val directory = path.toFile
         if (!directory.exists) {
             throw new ParseException("Directory does not exist")
@@ -77,7 +49,10 @@ class Util (
         parseManifest(manifest.toPath)
     }
 
-    private def parseManifest(path: Path): Manifest = {
+    @throws(classOf[NullPointerException])
+    @throws(classOf[IOException])
+    @throws(classOf[ParseException])
+    def parseManifest(path: Path): Manifest = {
         val file = path.toFile
         try {
             val xml       = XML.loadFile(file)
@@ -89,6 +64,15 @@ class Util (
         catch {
             case _: SAXParseException => throw new ParseException("Manifest file was not a well-formed XML file")
         }
+    }
+
+    /**
+      * Returns a sequence of errors found upon validation
+      * @param manifest
+      * @return
+      */
+    def validate(manifest: Manifest): Seq[String] = {
+        ManifestValidator().validate(manifest)
     }
 }
 
