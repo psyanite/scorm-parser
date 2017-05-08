@@ -2,37 +2,17 @@ package com.psyanite.scorm.validator
 
 import com.psyanite.scorm.node.Item
 
-import scalaz.Scalaz._
-import scalaz.{NonEmptyList, Validation}
-
 class ItemValidator {
-    type ValidationNel[T] = Validation[NonEmptyList[String], T]
 
-    def validate(item: Item): ValidationNel[Item] = {
-        (validateIdentifier(item.identifier) |@|
-          validateTitle(item.title) |@|
-          validateMasteryScore(item.masteryScore))
-        {Item(_, _, _)}
+    def validate(item: Item): Seq[String] = {
+        validateMasteryScore(item.masteryScore)
     }
 
-    def validateIdentifier(identifier: String): ValidationNel[String] = {
-        identifier.successNel
-    }
-
-    def validateTitle(title: String): ValidationNel[String] = {
-        title.successNel
-    }
-
-    def validateMasteryScore(masteryScore: Option[Int]): ValidationNel[Option[Int]] = {
-
+    def validateMasteryScore(masteryScore: Option[Int]): Seq[String] = {
         masteryScore match {
-            case None => masteryScore.successNel
-            case Some(score) => if (score < ItemValidator.MinValue || score > ItemValidator.MaxValue) {
-                    "Invalid mastery score '%d' found; expected value between %d and %d".format(score, ItemValidator.MinValue, ItemValidator.MaxValue).failureNel
-                }
-                else {
-                    masteryScore.successNel
-                }
+            case Some(score) if score < ItemValidator.MinValue || score > ItemValidator.MaxValue =>
+                Seq("Invalid mastery score '%d' found; expected value between %d and %d".format(score, ItemValidator.MinValue, ItemValidator.MaxValue))
+            case _ => Seq()
         }
     }
 }

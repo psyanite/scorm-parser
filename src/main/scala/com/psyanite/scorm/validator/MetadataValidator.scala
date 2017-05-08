@@ -1,55 +1,42 @@
 package com.psyanite.scorm.validator
 
-import com.psyanite.scorm.node.{Manifest, Metadata}
-
-import scalaz.Scalaz._
-import scalaz.{NonEmptyList, Validation}
+import com.psyanite.scorm.node.Metadata
 
 class MetadataValidator {
-    type ValidationNel[T] = Validation[NonEmptyList[String], T]
 
-    def validate(metadata: Metadata): ValidationNel[Metadata] = {
+    def validate(metadata: Metadata): Seq[String] = {
         if ((metadata.schema, metadata.schemaVersion, metadata.scheme) == (None, None, None)) {
-            "Metadata schema and scheme not found".failureNel
+            Seq("Metadata schema and scheme not found")
         }
         else {
             if (metadata.scheme.isEmpty) {
-                (validate("metadata schema", MetadataValidator.ValidSchemaValue, metadata.schema) |@|
-                  validate("metadata schema version", MetadataValidator.ValidSchemaVersionValue, metadata.schemaVersion) |@|
-                  validateSuccess(metadata.scheme))
-                {Metadata(_, _, _)}
+                validate("metadata schema", MetadataValidator.ValidSchemaValue, metadata.schema) ++
+                    validate("metadata schema version", MetadataValidator.ValidSchemaVersionValue, metadata.schemaVersion)
             }
             else {
-                (validateSuccess(metadata.schema) |@|
-                  validateSuccess(metadata.schemaVersion) |@|
-                  validate("metadata scheme", MetadataValidator.ValidSchemeValue, metadata.scheme))
-                {Metadata(_, _, _)}
+                validate("metadata scheme", MetadataValidator.ValidSchemeValue, metadata.scheme)
             }
         }
     }
 
-    def validateSuccess(value: Option[String]): ValidationNel[Option[String]] = {
-        value.successNel
-    }
-
-    private def validate(field: String, expected: String, target: Option[String]): ValidationNel[Option[String]] = {
+    private def validate(field: String, expected: String, target: Option[String]): Seq[String] = {
         target match {
-            case None => buildNotFoundFailure(field)
+            case None => Seq(buildNotFoundFailure(field))
             case Some(value) =>
                 if (value != expected) {
-                    buildUnexpectedFailure(field, expected, value)
+                    Seq(buildUnexpectedFailure(field, expected, value))
                 } else {
-                    target.successNel
+                    Seq()
                 }
         }
     }
 
-    private def buildNotFoundFailure(field: String): ValidationNel[Option[String]] = {
-        "%s value not found".format(field.capitalize).failureNel
+    private def buildNotFoundFailure(field: String): String = {
+        "%s value not found".format(field.capitalize)
     }
 
-    private def buildUnexpectedFailure(field: String, expected: String, found: String): ValidationNel[Option[String]] = {
-        "Invalid %s value found; expected '%s', but found '%s'".format(field, expected, found).failureNel
+    private def buildUnexpectedFailure(field: String, expected: String, found: String): String = {
+        "Invalid %s value found; expected '%s', but found '%s'".format(field, expected, found)
     }
 
 }
