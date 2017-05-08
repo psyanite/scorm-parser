@@ -3,7 +3,7 @@ properties.load(project.rootProject.file('local.properties').newDataInputStream(
 
 description 'Parser for SCORM 1.2 packages'
 group 'io.github.psyanite'
-version '0.1.0'
+version '0.2.3'
 
 buildscript {
     repositories {
