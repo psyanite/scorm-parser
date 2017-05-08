@@ -14,6 +14,6 @@ object ParseException {
     }
 }
 
-class ParseException(message: String) extends RuntimeException {
-    new RuntimeException(message, null)
+class ParseException(message: String = null, cause: Throwable = null) extends
+    RuntimeException(ParseException.defaultMessage(message, cause), cause) {
 }

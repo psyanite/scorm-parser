@@ -11,7 +11,6 @@ import net.lingala.zip4j.exception.ZipException
 import org.apache.commons.io.FileUtils
 
 import scala.xml.{SAXParseException, XML}
-import scalaz.{NonEmptyList, Validation}
 
 class Util (
     var zip: Option[Path]       = None,
@@ -41,12 +40,20 @@ class Util (
         manifest.map(parseManifest).getOrElse(throw new ParseException("Manifest file is not defined in parser"))
     }
 
-    def validate(manifest: Manifest): Validation[NonEmptyList[String], Manifest] = {
+    /**
+      * Returns a sequence of errors found upon validation
+      * @param manifest
+      * @return
+      */
+    def validate(manifest: Manifest): Seq[String] = {
         ManifestValidator().validate(manifest)
     }
 
     private def parseZip(path: Path): Manifest = {
         val file = path.toFile
+        if (!file.exists) {
+            throw new ParseException("Zip file does not exist")
+        }
         val zipFile = new ZipFile(file)
         val directory = Files.createTempDirectory(Paths.get(file.getParent), file.getName + System.nanoTime.toString)
         try {
@@ -59,8 +66,12 @@ class Util (
     }
 
     private def parseDirectory(path: Path): Manifest = {
+        val directory = path.toFile
+        if (!directory.exists) {
+            throw new ParseException("Directory does not exist")
+        }
         val manifest = path.resolve(Util.ManifestFile).toFile
-        if (!manifest.exists()) {
+        if (!manifest.exists) {
             throw new ParseException("Manifest file '%s' not found".format(Util.ManifestFile))
         }
         parseManifest(manifest.toPath)
