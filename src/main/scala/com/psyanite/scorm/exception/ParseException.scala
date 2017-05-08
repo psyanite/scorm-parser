@@ -1,6 +1,6 @@
 package com.psyanite.scorm.exception
 
-object InvalidManifestException {
+object ParseException {
     def defaultMessage(message: String, cause: Throwable): String = {
         if (message != null) {
             message
@@ -14,6 +14,6 @@ object InvalidManifestException {
     }
 }
 
-class InvalidManifestException(message: String = null, cause: Throwable = null) extends
-    RuntimeException(InvalidManifestException.defaultMessage(message, cause), cause) {
+class ParseException(message: String) extends RuntimeException {
+    new RuntimeException(message, null)
 }
