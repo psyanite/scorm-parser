@@ -8,7 +8,7 @@ class MetadataValidator {
         if (metadata.schema.isDefined) {
             validate("metadata schema", MetadataValidator.ValidSchemaValue, metadata.schema)
         }
-        else if (metadata.scheme.isDefined) {
+        else if (metadata.schemaVersion.isDefined) {
             validate("metadata schema version", MetadataValidator.ValidSchemaVersionValue, metadata.schemaVersion)
         }
         else if (metadata.scheme.isDefined) {
