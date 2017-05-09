@@ -76,8 +76,12 @@ object PackageParser {
         apply(path)
     }
 
+    @throws(classOf[NullPointerException])
     @throws(classOf[ZipException])
     private def unzip(zip: File): Path = {
+        if (!zip.exists()) {
+            throw new NullPointerException("Zip file does not exist")
+        }
         val zipFile = new ZipFile(zip)
         val directory = Files.createTempDirectory(Paths.get(zip.getParent), zip.getName + System.nanoTime.toString)
         zipFile.extractAll(directory.toString)
