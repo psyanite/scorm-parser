@@ -1,13 +1,15 @@
-package com.psyanite.scorm.util
+package com.psyanite.scorm
 
 import java.io.File
 import java.nio.file.Path
 
 import com.psyanite.scorm.PackageParser
+import com.psyanite.scorm.exception.ParseException
 import com.psyanite.scorm.validator.ManifestValidator
+import org.apache.commons.io.FileUtils
 import org.scalatest.{FunSpec, Matchers}
 
-class UtilSpec extends FunSpec with Matchers {
+class PackageParserSpec extends FunSpec with Matchers {
 
     private val BasePath       = "src/test/resources/"
     private val ValidDirPath   = BasePath + "valid/directory/"
@@ -31,7 +33,7 @@ class UtilSpec extends FunSpec with Matchers {
         new File(InvalidZipPath + zip + ".zip").toPath
     }
 
-    describe("PackageParser") {
+    describe(PackageParser.getClass.getCanonicalName) {
 
         describe("parseZip()") {
 
@@ -42,16 +44,16 @@ class UtilSpec extends FunSpec with Matchers {
                 manifest.resources.head.href should be (Some("SCORM.htm"))
                 val result = ManifestValidator().validate(manifest)
                 result should be (Seq())
+                FileUtils.r
             }
 
-//            it("should throw %s when parsing a non-existing zip".format(classOf[ParseException].getCanonicalName)) {
-//                val util = new PackageParser
-//                util.zip = Some(new File("non-existing.zip").toPath)
-//                val exception = intercept[ParseException] {
-//                    util.parseZip
-//                }
-//                exception.getMessage should be ("Zip file does not exist")
-//            }
+            it("should throw %s when parsing a non-existing zip".format(classOf[NullPointerException].getCanonicalName)) {
+                val parser = PackageParser(new File("non-existing.zip"))
+                val exception = intercept[NullPointerException] {
+                    parser.parse
+                }
+                exception.getMessage should be ("Zip file does not exist")
+            }
 //
 //            it("should throw %s when parsing a corrupt zip".format(classOf[ZipException].getCanonicalName)) {
 //                val util = new PackageParser
