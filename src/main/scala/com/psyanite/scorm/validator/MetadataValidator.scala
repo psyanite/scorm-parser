@@ -5,17 +5,17 @@ import com.psyanite.scorm.node.Metadata
 class MetadataValidator {
 
     def validate(metadata: Metadata): Seq[String] = {
-        if ((metadata.schema, metadata.schemaVersion, metadata.scheme) == (None, None, None)) {
-            Seq("Metadata schema and scheme not found")
+        if (metadata.schema.isDefined) {
+            validate("metadata schema", MetadataValidator.ValidSchemaValue, metadata.schema)
+        }
+        else if (metadata.scheme.isDefined) {
+            validate("metadata schema version", MetadataValidator.ValidSchemaVersionValue, metadata.schemaVersion)
+        }
+        else if (metadata.scheme.isDefined) {
+            validate("metadata scheme", MetadataValidator.ValidSchemeValue, metadata.scheme)
         }
         else {
-            if (metadata.scheme.isEmpty) {
-                validate("metadata schema", MetadataValidator.ValidSchemaValue, metadata.schema) ++
-                    validate("metadata schema version", MetadataValidator.ValidSchemaVersionValue, metadata.schemaVersion)
-            }
-            else {
-                validate("metadata scheme", MetadataValidator.ValidSchemeValue, metadata.scheme)
-            }
+            Seq("Metadata schema and scheme not found")
         }
     }
 
