@@ -8,7 +8,6 @@ import com.psyanite.scorm.node._
 import com.psyanite.scorm.validator.ManifestValidator
 import net.lingala.zip4j.core.ZipFile
 import net.lingala.zip4j.exception.ZipException
-import org.apache.commons.io.FileUtils
 
 import scala.xml.{SAXParseException, XML}
 
@@ -24,10 +23,10 @@ class PackageParser(val path: Path) {
     @throws(classOf[NullPointerException])
     @throws(classOf[IOException])
     @throws(classOf[ParseException])
-    def parse(): Manifest = {
+    def parse: Manifest = {
         val directory = path.toFile
         if (!directory.exists) {
-            throw new ParseException("Directory does not exist")
+            throw new NullPointerException("Directory does not exist")
         }
         val manifest = path.resolve(PackageParser.ManifestFile).toFile
         if (!manifest.exists) {
@@ -55,7 +54,7 @@ class PackageParser(val path: Path) {
 
     /**
       * Returns a sequence of errors found upon validation
-      * @param manifest
+      * @param manifest manifest file to validate
       * @return
       */
     def validate(manifest: Manifest): Seq[String] = {
