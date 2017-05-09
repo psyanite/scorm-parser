@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest identifier="Direzza_D102" version="1.1" xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd&#xD;&#xA;http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd&#xD;&#xA;http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <metadata>
+	<schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="B0">
+    <organization identifier="B0" structure="hierarchical">
+      <title>Direzza D102</title>
+        <item identifier="A1" identifierref="ref1">
+          <title>Direzza D102</title>
+          <description>
+            <langstring />
+          </description>
+        </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="ref1" type="webcontent" adlcp:scormtype="sco" href="mod1.htm">
+      <file href="mod1.htm" />
+    </resource>
+  </resources>
+</manifest>
