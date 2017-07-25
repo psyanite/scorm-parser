@@ -1,10 +1,6 @@
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
-description 'Parser for SCORM 1.2 packages'
-group 'io.github.psyanite'
-version '0.2.5'
-
 buildscript {
     repositories {
         jcenter()
@@ -14,10 +10,9 @@ buildscript {
     }
 }
 
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'scala'
-apply plugin: 'idea'
+group 'io.github.psyanite'
+version '0.2.5'
+description 'Parser for SCORM 1.2 packages'
 
 repositories {
     mavenCentral()
@@ -34,10 +29,10 @@ dependencies {
     testRuntime 'org.pegdown:pegdown:1.4.2'
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'scala'
+apply plugin: 'idea'
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
@@ -47,6 +42,11 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourcesJar
     archives javadocJar
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
 }
 
 def pomConfig = {
