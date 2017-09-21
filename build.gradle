@@ -5,7 +5,7 @@ buildscript {
 }
 
 group 'io.github.psyanite'
-version '0.2.5'
+version '0.2.6'
 description 'Parser for SCORM 1.2 packages'
 
 
