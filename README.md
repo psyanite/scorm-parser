@@ -2,61 +2,80 @@
 A Scala library to parse and validate SCORM 1.2 packages.
 
 ### Configuration
-Scala 2.11 is required.
+Scala 2.12.3 is required.
 
 ```
 groupId: io.github.psyanite
-artifactId: scorm-parser
-version: 0.1.0
+artifactId: scorm-parser_2.12
+version: 0.2.6
 ```
 
 ### Usage
 
 #### Using the parser
 ```scala
-import com.psyanite.scorm.parser.PackageParser
-import com.psyanite.scorm.parser.ManifestParser
+import com.psyanite.scorm.PackageParser
+import com.psyanite.scorm.validator.ManifestValidator
 
 
-val zip = new File("my-archive.zip")
-val metadata = try {
-  PackageParser.parseZip(zip)
+val zip = new File("my-scorm-package.zip")
+try {
+  val parser = PackageParser(zip)
+  val manifest = parser.parse()
+  val errors = ManifestValidator().validate(manifest)
 } catch {
   case e: Exception => println(e.message)
 }
 
-val directory = new File("/my-directory")
-val metadata = try {
-  PackageParser.parseDirectory(zip)
+val directory = new File("/my-unzipped-scorm-package")
+try {
+  val parser = PackageParser(directory)
+  val manifest = parser.parse()
+  val errors = ManifestValidator().validate(manifest)
 } catch {
   case e: Exception => println(e.message)
 }
 
-val manifest = new File("/my-directory/imsmanifest.xml")
-val metadata = try {
-  ManifestParser().parse(manifest)
-} catch {
-  case e: Exception => println(e.message)
-}
-
-
-metadata.item.head.masteryScore match {
+manifest.item.head.masteryScore match {
   case Some(score) => println("Mastery score is %d".format(score))
-  case None        => println("No mastery score")
+  case None        => println("Mastery score not found")
 }
 
-metadata.resources.head.href match {
-  case Some(href) => println("First entry point is %s".format(href))
-  case None       => println("First resources has no entry point")
+manifest.resources.head.href match {
+  case Some(href) => println("Entry point on first resource is %s".format(href))
+  case None       => println("Entry point on first resource not found")
+}
+
+manifest.resources(1).head.href match {
+  case Some(href) => println("Entry point on second resource is %s".format(href))
+  case None       => println("Entry point on second resource not found")
 }
 
 ```
 
+#### Manifest class
+```scala
+class Manifest (
+  var metadata:  Metadata,
+  var items:     Seq[Item],
+  var resources: Seq[Resource]
+)
+```
+
 #### Metadata class
 ```scala
-class Metadata(
-    var schema: Schema,
-    var items: Seq[Item],
-    var resources: Seq[Resource]
+case class Metadata (
+  var schema:        Option[String],
+  var schemaVersion: Option[String],
+  var scheme:        Option[String]
+)
+```
+
+#### Item class
+```scala
+case class Item (
+  var identifier:   String,
+  var title:        String,
+  var masteryScore: Option[Int]
 )
 ```
