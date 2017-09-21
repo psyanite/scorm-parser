@@ -1,15 +1,20 @@
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
 buildscript {
     repositories {
         jcenter()
     }
+    dependencies {
+        classpath group: 'com.jfrog.bintray.gradle', name: 'gradle-bintray-plugin', version: '1.7.3'
+    }
 }
-
 group 'io.github.psyanite'
 version '0.2.6'
 description 'Parser for SCORM 1.2 packages'
 
-
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 apply plugin: 'scala'
 apply plugin: 'idea'
 
@@ -56,6 +61,52 @@ def pomConfig = {
             id "psyanite"
             name "psyanite"
             email "psyanite@gmail.com"
+        }
+    }
+}
+
+publishing {
+    publications {
+        ScormParserPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId project.group
+            artifactId rootProject.name
+            version project.version
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('name', rootProject.name)
+                root.appendNode('description', project.description)
+                root.appendNode('url', 'https://github.com/psyanite/scorm-parser')
+                def scm = root.appendNode('scm')
+                scm.appendNode('url', 'https://github.com/psyanite/scorm-parser')
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+bintray {
+    user = properties.getProperty('bintray.user')
+    key = properties.getProperty('bintray.apikey')
+    publish = true
+    override = true
+    publications = ['ScormParserPublication']
+    filesSpec {
+        from 'build/libs'
+    }
+    pkg {
+        repo = 'psyanite'
+        name = rootProject.name
+        userOrg = 'psyanite'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/psyanite/scorm-parser.git'
+        version {
+            name = project.version
+            gpg {
+                sign = true
+            }
         }
     }
 }
