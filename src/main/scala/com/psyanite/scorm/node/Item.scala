@@ -6,8 +6,8 @@ import scala.util.Try
 import scala.xml.NodeSeq
 
 case class Item (
-    var identifier: String,
-    var title: String,
+    var identifier:   String,
+    var title:        String,
     var masteryScore: Option[Int]
 )
 

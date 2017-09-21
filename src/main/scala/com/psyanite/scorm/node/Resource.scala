@@ -5,10 +5,10 @@ import com.psyanite.scorm.exception.ParseException
 import scala.xml.NodeSeq
 
 case class Resource (
-    var identifier: String,
+    var identifier:   String,
     var resourceType: String,
-    var scormType: String,
-    var href: Option[String]
+    var scormType:    String,
+    var href:         Option[String]
 )
 
 object Resource extends BaseNode {

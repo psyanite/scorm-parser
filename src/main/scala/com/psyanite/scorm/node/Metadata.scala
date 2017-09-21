@@ -3,9 +3,9 @@ package com.psyanite.scorm.node
 import scala.xml.NodeSeq
 
 case class Metadata (
-    var schema: Option[String],
+    var schema:        Option[String],
     var schemaVersion: Option[String],
-    var scheme: Option[String]
+    var scheme:        Option[String]
 )
 
 object Metadata extends BaseNode {

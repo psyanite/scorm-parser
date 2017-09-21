@@ -1,8 +1,8 @@
 package com.psyanite.scorm.node
 
 class Manifest (
-    var metadata: Metadata,
-    var items: Seq[Item],
+    var metadata:  Metadata,
+    var items:     Seq[Item],
     var resources: Seq[Resource]
 )
 

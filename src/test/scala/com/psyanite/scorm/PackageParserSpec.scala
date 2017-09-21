@@ -35,7 +35,7 @@ class PackageParserSpec extends FunSpec with Matchers {
 
     describe(PackageParser.getClass.getCanonicalName) {
 
-        describe("parseZip()") {
+        describe("parsing a zip") {
 
             it("should return correct metadata when parsing a valid zip") {
                 val parser = PackageParser(buildValidZipFile("valid-zip"))
@@ -79,7 +79,7 @@ class PackageParserSpec extends FunSpec with Matchers {
             }
         }
 
-        describe("parseDirectory()") {
+        describe("parsing a directory") {
 
             it("should throw %s when parsing a non-existing directory".format(classOf[ParseException].getCanonicalName)) {
                 val parser = PackageParser(new File("non-existing-directory").toPath)
