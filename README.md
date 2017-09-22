@@ -4,6 +4,8 @@ A Scala library to parse and validate SCORM 1.2 packages.
 ### Configuration
 Scala 2.12.3 is required.
 
+[https://bintray.com/psyanite/psyanite/scorm-parser_2.12](Bintray)
+
 ```
 groupId: io.github.psyanite
 artifactId: scorm-parser_2.12
